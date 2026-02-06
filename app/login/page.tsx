@@ -10,7 +10,10 @@ export default function LoginPage() {
   const [show, setShow] = useState(false);
   const [shake, setShake] = useState(false);
 
-  const canSubmit = useMemo(() => username.trim().length >= 3 && password.length >= 4, [username, password]);
+  const canSubmit = useMemo(
+    () => username.trim().length >= 3 && password.length >= 4,
+    [username, password]
+  );
 
   async function login() {
     if (loading) return;
@@ -21,8 +24,10 @@ export default function LoginPage() {
       const r = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
+        credentials: "include", // ✅ cookie taşınsın
         body: JSON.stringify({ username, password }),
       });
+
       const j = await r.json();
       if (!j.ok) {
         setMsg(j.error || "Hata");
@@ -30,6 +35,7 @@ export default function LoginPage() {
         setTimeout(() => setShake(false), 450);
         return;
       }
+
       window.location.href = "/";
     } catch {
       setMsg("Bağlantı hatası");
@@ -42,7 +48,6 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen text-white relative overflow-hidden">
-      {/* neon bg */}
       <div className="fixed inset-0 -z-10 auth-bg" />
 
       <style jsx global>{`
@@ -97,13 +102,9 @@ export default function LoginPage() {
         }
         @keyframes rainbowShift { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
 
-        .glass {
-          backdrop-filter: blur(12px);
-        }
+        .glass { backdrop-filter: blur(12px); }
 
-        .shake {
-          animation: shake 450ms ease-in-out;
-        }
+        .shake { animation: shake 450ms ease-in-out; }
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
           20% { transform: translateX(-6px); }
@@ -112,15 +113,17 @@ export default function LoginPage() {
           80% { transform: translateX(4px); }
         }
 
-        .spin {
-          animation: spin 900ms linear infinite;
-        }
+        .spin { animation: spin 900ms linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
 
       <section className="min-h-screen grid place-items-center px-6 py-12">
-        <div className={["w-full max-w-md rounded-[28px] border border-white/10 bg-black/40 p-7 shadow-[0_30px_120px_rgba(0,0,0,0.65)] glass", shake ? "shake" : ""].join(" ")}>
-          {/* header */}
+        <div
+          className={[
+            "w-full max-w-md rounded-[28px] border border-white/10 bg-black/40 p-7 shadow-[0_30px_120px_rgba(0,0,0,0.65)] glass",
+            shake ? "shake" : "",
+          ].join(" ")}
+        >
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs font-bold text-white/60">NINIBET</div>
@@ -134,7 +137,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* form */}
           <div className="mt-6 space-y-3">
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60">👤</span>
@@ -181,7 +183,7 @@ export default function LoginPage() {
               className={[
                 "mt-2 w-full rounded-2xl border border-white/10 px-4 py-3 font-extrabold transition",
                 "bg-white/10 hover:bg-white/15",
-                (!canSubmit || loading) ? "opacity-60 cursor-not-allowed" : "",
+                !canSubmit || loading ? "opacity-60 cursor-not-allowed" : "",
               ].join(" ")}
               type="button"
             >

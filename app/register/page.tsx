@@ -10,7 +10,10 @@ export default function RegisterPage() {
   const [show, setShow] = useState(false);
   const [shake, setShake] = useState(false);
 
-  const canSubmit = useMemo(() => username.trim().length >= 3 && password.length >= 4, [username, password]);
+  const canSubmit = useMemo(
+    () => username.trim().length >= 3 && password.length >= 4,
+    [username, password]
+  );
 
   async function register() {
     if (loading) return;
@@ -21,8 +24,10 @@ export default function RegisterPage() {
       const r = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "content-type": "application/json" },
+        credentials: "include", // ✅ cookie taşınsın
         body: JSON.stringify({ username, password }),
       });
+
       const j = await r.json();
       if (!j.ok) {
         setMsg(j.error || "Hata");
@@ -30,6 +35,7 @@ export default function RegisterPage() {
         setTimeout(() => setShake(false), 450);
         return;
       }
+
       window.location.href = "/";
     } catch {
       setMsg("Bağlantı hatası");
@@ -112,7 +118,12 @@ export default function RegisterPage() {
       `}</style>
 
       <section className="min-h-screen grid place-items-center px-6 py-12">
-        <div className={["w-full max-w-md rounded-[28px] border border-white/10 bg-black/40 p-7 shadow-[0_30px_120px_rgba(0,0,0,0.65)] glass", shake ? "shake" : ""].join(" ")}>
+        <div
+          className={[
+            "w-full max-w-md rounded-[28px] border border-white/10 bg-black/40 p-7 shadow-[0_30px_120px_rgba(0,0,0,0.65)] glass",
+            shake ? "shake" : "",
+          ].join(" ")}
+        >
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs font-bold text-white/60">NINIBET</div>
@@ -172,7 +183,7 @@ export default function RegisterPage() {
               className={[
                 "mt-2 w-full rounded-2xl border border-white/10 px-4 py-3 font-extrabold transition",
                 "bg-white/10 hover:bg-white/15",
-                (!canSubmit || loading) ? "opacity-60 cursor-not-allowed" : "",
+                !canSubmit || loading ? "opacity-60 cursor-not-allowed" : "",
               ].join(" ")}
               type="button"
             >
