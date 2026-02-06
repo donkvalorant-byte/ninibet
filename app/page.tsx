@@ -2,28 +2,41 @@
 
 import { useEffect, useState } from "react";
 
-const COIN_KEY = "donkgames_coin_v1";
+type MeResp =
+  | { ok: true; user: { id: number; username: string; coin: number } }
+  | { ok: false };
 
 export default function Home() {
-  const [coin, setCoin] = useState<number>(1000);
   const [ready, setReady] = useState(false);
+  const [me, setMe] = useState<MeResp | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(COIN_KEY);
-      if (raw !== null) {
-        const n = Number(raw);
-        if (Number.isFinite(n)) setCoin(n);
+    (async () => {
+      try {
+        const r = await fetch("/api/me", { cache: "no-store" });
+        if (!r.ok) {
+          // giriş yoksa login'e yolla
+          window.location.href = "/login";
+          return;
+        }
+        const j = (await r.json()) as MeResp;
+        if (!j.ok) {
+          window.location.href = "/login";
+          return;
+        }
+        setMe(j);
+        setReady(true);
+      } catch {
+        window.location.href = "/login";
       }
-    } catch {}
-    setReady(true);
+    })();
   }, []);
 
-  function resetCoin() {
-    setCoin(1000);
+  async function logout() {
     try {
-      localStorage.setItem(COIN_KEY, "1000");
+      await fetch("/api/auth/logout", { method: "POST" });
     } catch {}
+    window.location.href = "/login";
   }
 
   const games = [
@@ -42,7 +55,6 @@ export default function Home() {
       <div className="fixed inset-0 -z-10 neon-bg" />
 
       <style jsx global>{`
-        /* ================= NEON BACKGROUND ================= */
         .neon-bg {
           position: fixed;
           inset: 0;
@@ -91,23 +103,19 @@ export default function Home() {
           0% { background-position: 0% 0%; }
           100% { background-position: 100% 100%; }
         }
-
         @keyframes neonPulse {
           0%,100% { filter: brightness(1.05) saturate(160%); }
           50% { filter: brightness(1.4) saturate(220%); }
         }
-
         @keyframes gridScroll {
           0% { background-position: 0 0; }
           100% { background-position: 0 40px; }
         }
-
         @keyframes noiseMove {
           0% { transform: translate(0,0); }
           100% { transform: translate(120px,120px); }
         }
 
-        /* ================= GAME TITLES ================= */
         .rainbowTitle {
           font-weight: 900;
           text-transform: uppercase;
@@ -128,7 +136,6 @@ export default function Home() {
           color: transparent;
           animation: rainbowShift 1.1s linear infinite;
         }
-
         @keyframes rainbowShift {
           0% { background-position: 0% 50%; }
           100% { background-position: 100% 50%; }
@@ -137,20 +144,23 @@ export default function Home() {
 
       {/* HEADER */}
       <header className="mx-auto max-w-6xl px-6 py-10 flex flex-wrap items-center justify-between gap-4">
-        <div className="text-2xl font-extrabold tracking-tight">
-          NINIBET
-        </div>
+        <div className="text-2xl font-extrabold tracking-tight">NINIBET</div>
 
         <div className="flex items-center gap-3 text-sm">
           <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2">
-            🪙 Coin: <span className="font-extrabold">{ready ? coin : "…"}</span>
+            👤 <span className="font-extrabold">{ready && me && me.ok ? me.user.username : "…"}</span>
           </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2">
+            🪙 Coin: <span className="font-extrabold">{ready && me && me.ok ? me.user.coin : "…"}</span>
+          </div>
+
           <button
-            onClick={resetCoin}
+            onClick={logout}
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 hover:bg-white/10"
             type="button"
           >
-            Coin Reset
+            Çıkış
           </button>
         </div>
       </header>
@@ -172,12 +182,7 @@ export default function Home() {
                   <div className="grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/5 text-xl">
                     {g.badge}
                   </div>
-                  <div
-                    className={[
-                      "text-xl font-extrabold",
-                      isRainbow(g.name) ? "rainbowTitle" : "",
-                    ].join(" ")}
-                  >
+                  <div className={["text-xl font-extrabold", isRainbow(g.name) ? "rainbowTitle" : ""].join(" ")}>
                     {g.name}
                   </div>
                 </div>
